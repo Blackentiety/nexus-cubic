@@ -46,18 +46,22 @@ final class SanctionsController extends AbstractController
             ]);
         }
 
+        $cible = $this->userRepository->findOneBy(['pseudoMinecraft' => $datas['userCible']]);
+        if (!$cible) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Cible not found',
+            ]);
+        }
+
         $ban = new Ban();
         $ban->setUserCible($datas['userCible']);
         $ban->setRaison($datas['raison']);
         $ban->setDateFin(new \DateTime($datas['dateFin']));
         $ban->setIsActive(true);
-        $cible = $this->userRepository->findOneBy(['pseudoMinecraft' => $datas['userCible']]);
-        if (!$cible) {
-            return $this->json([
-                'status' => 'error',
-                'message' => 'User not found',
-            ]);
-        }
-        return $this->json([]);
+        return $this->json([
+            'status' => 'success',
+            'message' => 'Sanction added successfully'
+        ]);
     }
 }
