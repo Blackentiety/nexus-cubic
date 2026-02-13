@@ -44,6 +44,39 @@ final class AuthController extends AbstractController
             'PseudoMinecraft' => $user->getPseudoMinecraft()
         ]);
     }
+
+    #[Route('/api/login', name: 'api_login', methods: ['POST'])]
+    public function loginUser(Request $request, EntityManagerInterface $em): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!$data){
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Invalid JSON'
+            ]);
+        }
+        $user = $this->userRepository->findOneBy(['email' => $data['email']]);
+        if (!$user){
+            return $this->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ]);
+        }
+        if (md5($data['password']) != $user->getPassword()){
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Wrong password'
+            ]);
+        }
+        $token = md5(uniqid());
+        $user->setToken($token);
+        $em->persist($user);
+        $em->flush();
+        return $this->json([
+            'status' => 'success',
+            'token' => $token,
+        ]);
+    }
     #[Route('/auth', name: 'app_auth')]
     public function index(): Response
     {
