@@ -141,12 +141,4 @@ final class AuthController extends AbstractController
             'token' => $token,
         ]);
     }
-
-    #[Route('/auth', name: 'app_auth')]
-    public function index(): Response
-    {
-        return $this->render('auth/index.html.twig', [
-            'controller_name' => 'AuthController',
-        ]);
-    }
 }
