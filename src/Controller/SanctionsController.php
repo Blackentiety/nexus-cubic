@@ -64,4 +64,35 @@ final class SanctionsController extends AbstractController
             'message' => 'Sanction added successfully'
         ]);
     }
+
+    #[Route('/api/admin/bans', name: 'app_sanctions_read', methods: ['GET'])]
+    public function readBans(Request $request, EntityManagerInterface $em): Response
+    {
+        $token = $request->headers->get('Authorization');
+        if (!$token) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Sorry, you must authenticate to read bans.',
+            ]);
+        }
+        $token = substr($token, 7);
+        $user = $this->userRepository->findOneBy(['token' => $token]);
+        if (!$user) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'user not found'
+            ]);
+        }
+        if ($user->getRole() !== 'ROLE_ADMIN') {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'You are not allowed to read bans',
+            ]);
+        }
+        $sanctions = $this->banRepository->findAll();
+        return $this->json([
+            'status' => 'success',
+            'result' => $sanctions
+        ]);
+    }
 }
