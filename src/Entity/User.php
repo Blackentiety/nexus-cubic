@@ -46,6 +46,9 @@ class User
     #[ORM\ManyToMany(targetEntity: Item::class)]
     private Collection $items;
 
+    #[ORM\ManyToOne(inversedBy: 'users')]
+    private ?Faction $faction = null;
+
     public function __construct()
     {
         $this->items = new ArrayCollection();
@@ -172,6 +175,18 @@ class User
     public function removeItem(Item $item): static
     {
         $this->items->removeElement($item);
+
+        return $this;
+    }
+
+    public function getFaction(): ?Faction
+    {
+        return $this->faction;
+    }
+
+    public function setFaction(?Faction $faction): static
+    {
+        $this->faction = $faction;
 
         return $this;
     }

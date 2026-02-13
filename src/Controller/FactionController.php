@@ -53,6 +53,7 @@ final class FactionController extends AbstractController
         $faction->setPower(10);
         $faction->setIdCreator($user->getId());
         $user->setCredits($credit - $price);
+        $user->setFaction($faction);
         $em->persist($faction);
         $em->persist($user);
         $em->flush();
@@ -78,4 +79,43 @@ final class FactionController extends AbstractController
         ]);
     }
 
+    #[Route('/api/faction/join/{id}', name: 'api_faction_join', methods: ['POST'])]
+    public function joinFaction(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $faction = $this->factionRepository->find($id);
+        if (!$faction) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Faction not found',
+            ]);
+        }
+        $token = $request->headers->get('Authorization');
+        if (!$token){
+            return $this->json([
+                'error' => 'error',
+                'message' => 'Unauthorized'
+            ]);
+        }
+        $token = substr($token, 7);
+        $user = $this->userRepository->findOneBy(['token' => $token]);
+        if (!$user) {
+            return $this->json([
+                'error' => 'error',
+                'message' => 'User not found',
+            ]);
+        }
+        if ($user->getFaction()==$faction) {
+            return $this->json([
+                'error' => 'error',
+                'message' => 'Faction already joined',
+            ]);
+        }
+        $user->setFaction($faction);
+        $em->persist($user);
+        $em->flush();
+        return $this->json([
+            'status' => 'success',
+            'message' => 'Faction joined',
+        ]);
+    }
 }
