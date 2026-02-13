@@ -118,4 +118,47 @@ final class FactionController extends AbstractController
             'message' => 'Faction joined',
         ]);
     }
+
+    #[Route('/api/faction/{id}', name: 'api_faction_delete', methods: ['DELETE'])]
+    public function deleteFaction(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $faction = $this->factionRepository->find($id);
+        if (!$faction) {
+            return $this->json([
+                'error' => 'error',
+                'message' => 'Faction not found',
+            ]);
+        }
+        $token = $request->headers->get('Authorization');
+        if (!$token){
+            return $this->json([
+                'error' => 'error',
+                'message' => 'Unauthorized'
+            ]);
+        }
+        $token = substr($token, 7);
+        $user = $this->userRepository->findOneBy(['token' => $token]);
+        if (!$user) {
+            return $this->json([
+                'error' => 'error',
+                'message' => 'User not found',
+            ]);
+        }
+        if ($user->getId()!==$faction->getIdCreator()||$user->getRole()!=='ROLE_USER') {
+            return $this->json([
+                'error' => 'error',
+                'message' => 'You cannot delete this faction',
+            ]);
+        }
+        foreach ($faction->getUsers() as $users) {
+            $users->setFaction(null);
+        }
+        $em->remove($faction);
+        $em->persist($user);
+        $em->flush();
+        return $this->json([
+            'status' => 'success',
+            'message' => 'Faction deleted',
+        ]);
+    }
 }
