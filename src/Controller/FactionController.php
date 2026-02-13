@@ -61,4 +61,21 @@ final class FactionController extends AbstractController
             'data' => $faction,
         ]);
     }
+
+    #[Route('/api/factions', name: 'api_faction_read', methods: ['GET'])]
+    public function getFactions(): Response
+    {
+        $factions = $this->factionRepository->findAll();
+        if (!$factions) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'No factions found',
+            ]);
+        }
+        return $this->json([
+            'status' => 'success',
+            'data' => $factions,
+        ]);
+    }
+
 }
