@@ -108,6 +108,40 @@ final class AuthController extends AbstractController
         ]);
     }
 
+    #[Route('/api/me', name: 'api_me_update', methods: ['PUT'])]
+    public function updateUser(Request $request, EntityManagerInterface $em): Response
+    {
+        $token = $request->headers->get('Authorization');
+        if (!$token){
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Token not provided'
+            ]);
+        }
+        $token = substr($token, 7);
+        $data = json_decode($request->getContent(), true);
+        if (!$data){
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Invalid JSON'
+            ]);
+        }
+        $user = $this->userRepository->findOneBy(['token' => $token]);
+        if (!$user){
+            return $this->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ]);
+        }
+        $user->setPseudoMinecraft($data['pseudoMinecraft']);
+        $em->persist($user);
+        $em->flush();
+        return $this->json([
+            'status' => 'success',
+            'token' => $token,
+        ]);
+    }
+
     #[Route('/auth', name: 'app_auth')]
     public function index(): Response
     {
