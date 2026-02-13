@@ -71,4 +71,32 @@ final class ShopController extends AbstractController
         ]);
     }
 
+    #[Route('/api/inventory', name: 'api_shop_inventory', methods: ['GET'])]
+    public function getUserInventory(Request $request, EntityManagerInterface $em): Response
+    {
+        $token = $request->headers->get('Authorization');
+        if (!$token) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Authorization header not found',
+            ]);
+        }
+        $token = substr($token, 7);
+        $user = $this->userRepository->findOneBy(['token' => $token]);
+        if (!$user) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'User not found',
+            ]);
+        }
+        $inventory = $user->getItems();
+        if (!$inventory) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Inventory not found',
+            ]);
+        }
+        return $this->json(['status' => 'success', 'result'=>$inventory]);
+    }
+
 }
